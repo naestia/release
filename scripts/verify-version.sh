@@ -8,11 +8,14 @@ if [ -f mix.exs ]; then
 elif [ -f pyproject.toml ]; then
   FILE_VERSION=$(grep '^version' pyproject.toml | head -1 | cut -d'"' -f2)
   FILE="pyproject.toml"
+elif [ -f package.json ]; then
+  FILE_VERSION=$(grep '"version"' package.json | head -1 | cut -d'"' -f4)
+  FILE="package.json"
 elif [ -f .version ]; then
   FILE_VERSION=$(cat .version | tr -d '[:space:]')
   FILE=".version"
 else
-  echo "ERROR: No version file found (mix.exs, pyproject.toml, or .version)"
+  echo "ERROR: No version file found (mix.exs, pyproject.toml, package.json, or .version)"
   exit 1
 fi
 

@@ -1,0 +1,42 @@
+name: Release
+description: Verifies version file matches tag and creates a GitHub release
+
+inputs:
+  tag_prefix:
+    description: Expected tag prefix (e.g. "v")
+    required: false
+    default: "v"
+  github_token:
+    description: GitHub token with contents:write permission
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - name: Extract version from tag
+      id: version
+      shell: bash
+      run: bash "${{ github.action_path }}/scripts/extract-version.sh"
+      env:
+        TAG_PREFIX: ${{ inputs.tag_prefix }}
+
+    - name: Verify version file matches tag
+      shell: bash
+      run: bash "${{ github.action_path }}/scripts/verify-version.sh"
+      env:
+        TAG_VERSION: ${{ steps.version.outputs.version }}
+
+    - name: Create GitHub Release
+      uses: softprops/action-gh-release@v2
+      with:
+        tag_name: ${{ steps.version.outputs.tag }}
+        name: ${{ steps.version.outputs.tag }}
+        generate_release_notes: true
+        token: ${{ inputs.github_token }}
+
+    - name: Update major tag
+      shell: bash
+      run: bash "${{ github.action_path }}/scripts/update-major-tag.sh"
+      env:
+        MAJOR_VERSION: ${{ steps.version.outputs.major }}
+        GITHUB_TOKEN: ${{ inputs.github_token }}
